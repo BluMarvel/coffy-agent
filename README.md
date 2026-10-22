@@ -20,7 +20,7 @@ The starter includes:
 - [Adaptive interruption handling](https://docs.livekit.io/agents/logic/turns/adaptive-interruption-handling/), which tells a real interruption from an "uh-huh" or background noise, so your agent doesn't stop talking when it shouldn't.
 - [Background voice cancellation](https://docs.livekit.io/transport/media/noise-cancellation/).
 - Session transcripts, traces, and recordings from LiveKit [Agent Observability](https://docs.livekit.io/testing/observability/).
-- [Simulations](https://docs.livekit.io/testing/simulations/) that test full conversations with your agent, run in CI on every merge to `main`.
+- [Simulations](https://docs.livekit.io/testing/simulations/) that test full conversations with your agent, run on demand from the Actions tab.
 - A `Dockerfile` for [deploying to LiveKit Cloud](https://docs.livekit.io/deploy/agents/).
 
 The starter works with any [custom web or mobile frontend](https://docs.livekit.io/frontends/) or with [telephony](https://docs.livekit.io/telephony/).
@@ -192,7 +192,9 @@ Simulations run full multi-turn conversations between a simulated user and your 
 lk agent simulate text --scenarios scenarios.yaml
 ```
 
-The `Simulations` workflow in [`.github/workflows/simulations.yml`](.github/workflows/simulations.yml) runs the same file on every merge to `main`, and on demand from the Actions tab. It doesn't run on every pull request push because each run uses real inference. See the [simulations guide](https://docs.livekit.io/testing/simulations/) for how to write scenarios and read results.
+The `Checks` workflow in [`.github/workflows/ruff.yml`](.github/workflows/ruff.yml) runs ruff and the unit tests (`uv run pytest`) on every push and pull request to `main`. They need no secrets.
+
+The `Simulations` workflow in [`.github/workflows/simulations.yml`](.github/workflows/simulations.yml) runs `scenarios.yaml` only when you start it from the Actions tab, because each run uses real LiveKit and Gemini credit. It needs four repo secrets: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, and `GOOGLE_API_KEY`. See the [simulations guide](https://docs.livekit.io/testing/simulations/) for how to write scenarios and read results.
 
 The browser scenarios live in a separate file, because they drive a real Chromium and need Node and a browser installed:
 

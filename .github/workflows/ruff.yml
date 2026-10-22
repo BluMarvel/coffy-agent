@@ -1,4 +1,4 @@
-name: Ruff
+name: Checks
 
 on:
   push:
@@ -31,3 +31,6 @@ jobs:
 
     - name: Run ruff formatter
       run: uv run ruff format --check --diff .
+
+    - name: Run unit tests
+      run: uv run pytest -q

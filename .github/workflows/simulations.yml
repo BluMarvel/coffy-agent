@@ -1,12 +1,12 @@
 # Runs the scenarios in scenarios.yaml against your agent on LiveKit Cloud.
-# Simulations spend real inference, so this runs on merges to main and on demand
-# rather than on every pull request push. Run
+# Simulations spend real LiveKit and Gemini credit, so this only runs when started
+# from the Actions tab. It needs four repo secrets: LIVEKIT_URL, LIVEKIT_API_KEY,
+# LIVEKIT_API_SECRET, and GOOGLE_API_KEY (the agent itself runs on the runner and
+# talks to Gemini Live). Run
 # `lk agent simulate text --scenarios scenarios.yaml` locally while iterating.
 name: Simulations
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -19,6 +19,7 @@ jobs:
       LIVEKIT_URL: ${{ secrets.LIVEKIT_URL }}
       LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
       LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
     steps:
     - uses: actions/checkout@v6
