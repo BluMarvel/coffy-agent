@@ -132,7 +132,7 @@ What the agent may do, and what it must ask for first:
 
 Two things to know about the approval gate:
 
-- It is enforced by the prompt and by `propose_action` speaking the question itself, not by the tool runtime. Browser tools are MCP tools, and MCP tool calls cannot be intercepted in Python, so a distracted model could still act without asking. The scenarios in [`scenarios.browser.yaml`](scenarios.browser.yaml) pin the behaviour that matters, and the agent console shows every tool call.
+- It is enforced in code as well as by the prompt. `GatedStdioServer` in `src/browser.py` checks every MCP call before it reaches the server: a page-changing tool is refused unless the user said yes to the latest proposal within the last five minutes. One yes is not spent per click, because an approved action such as logging in takes several. Every proposal, answer, and refusal is appended to `logs/approvals.jsonl` (`COFFY_AUDIT_LOG`). The scenarios in [`scenarios.browser.yaml`](scenarios.browser.yaml) pin the behaviour that matters, and the agent console shows every tool call.
 - `propose_action` deliberately does not use a nested `AgentTask`, which the docs otherwise recommend for pausing for user input. Google's realtime model has no separate LLM inside a tool activity, so a task cannot speak for itself, and LiveKit logs that resuming function calls from chat context is unsupported for it.
 
 Configuration lives in `.env.example`:
@@ -162,7 +162,7 @@ Coffy can also use [Claude Code](https://claude.com/product/claude-code) on the 
 | Change the computer: run a command, edit or write a file, hand a task to a Claude Code agent | `Bash`, `Edit`, `Write`, `Agent` | Must call `propose_action` first, the same gate as the browser |
 | Everything else Claude Code offers (scheduling, worktrees, messaging, notifications) | | Never exposed |
 
-The agent finds `claude` through `CLAUDE_CODE_COMMAND`, then `PATH`, then the copy bundled with the Claude Code VS Code extension. If none is found, it starts without these tools and logs a warning. The approval gate has the same limit as the browser's: it is enforced by the prompt, not by the tool runtime. Like browser control, this is local-only: the deployed container has no Claude Code.
+The agent finds `claude` through `CLAUDE_CODE_COMMAND`, then `PATH`, then the copy bundled with the Claude Code VS Code extension. If none is found, it starts without these tools and logs a warning. The approval gate is enforced in code, more strictly than the browser's: each yes allows exactly one command, edit, write, or agent task. Some things are refused even with a yes: reading or changing secrets (`.env*`, keys, Obsidian plugin settings), recursive deletes, `sudo`, `git push`, `curl`/`wget`, and changing files outside the project or in `certs/`, `launchd/`, and `.claude/`. `claude mcp serve` does not apply the rules in `.claude/settings.json` to MCP calls, so these checks live in `src/claude_code.py`; the settings file still guards interactive Claude Code sessions in this folder. Like browser control, this is local-only: the deployed container has no Claude Code.
 
 ## Frontends and telephony
 
