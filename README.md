@@ -164,6 +164,10 @@ Coffy can also use [Claude Code](https://claude.com/product/claude-code) on the 
 
 The agent finds `claude` through `CLAUDE_CODE_COMMAND`, then `PATH`, then the copy bundled with the Claude Code VS Code extension. If none is found, it starts without these tools and logs a warning. The approval gate is enforced in code, more strictly than the browser's: each yes allows exactly one command, edit, write, or agent task. Some things are refused even with a yes: reading or changing secrets (`.env*`, keys, Obsidian plugin settings), recursive deletes, `sudo`, `git push`, `curl`/`wget`, and changing files outside the project or in `certs/`, `launchd/`, and `.claude/`. `claude mcp serve` does not apply the rules in `.claude/settings.json` to MCP calls, so these checks live in `src/claude_code.py`; the settings file still guards interactive Claude Code sessions in this folder. Like browser control, this is local-only: the deployed container has no Claude Code.
 
+## Memory
+
+Coffy can remember things about you between calls in one Obsidian note. Set `COFFY_MEMORY_VAULT` to a vault id from `OBSIDIAN_VAULTS` to turn it on (leave it empty to turn it off). `COFFY_MEMORY_NOTE` names the note and defaults to `Coffy/Coffy Memory.md`. `src/memory.py` reads the note when a call starts and adds it to the instructions as background facts, never as instructions. It gives up after three seconds, so a closed vault never delays the greeting. Coffy adds to the note with the ordinary `obsidian_append_to_note` tool, so every new memory needs your yes. The note is created the first time, and you can read or edit it in Obsidian at any time.
+
 ## Frontends and telephony
 
 Pair the agent with a prebuilt frontend starter, or add telephony:

@@ -16,6 +16,7 @@ from livekit.plugins import ai_coustics, google
 
 from browser import BrowserState, build_browser_tools
 from claude_code import build_claude_code_tools
+from memory import load_memory
 from obsidian import build_obsidian_tools
 from tools import search_web
 
@@ -27,7 +28,8 @@ load_dotenv(".env.local")
 class Assistant(Agent):
     # state is the session's userdata: the browser and Claude Code check it before
     # every change, so it must be the object propose_action and record_decision update.
-    def __init__(self, state: BrowserState) -> None:
+    # memory is what load_memory read for this call, added after the prompt.
+    def __init__(self, state: BrowserState, memory: str = "") -> None:
         super().__init__(
             # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
             # See all available models at https://docs.livekit.io/agents/models/llm/
@@ -121,7 +123,8 @@ class Assistant(Agent):
                 - For medical, legal, or financial topics, provide general information only and suggest consulting a qualified professional.
                 - Protect privacy and minimize sensitive data.
                 """
-            ),
+            )
+            + memory,
         )
 
     # To add tools, use the @function_tool decorator.
@@ -191,9 +194,12 @@ async def my_agent(ctx: JobContext):
         expressive=True,
     )
 
+    # What Coffy remembers about the user from earlier calls ("" when memory is off)
+    memory = await load_memory()
+
     # Start the session, which initializes the voice pipeline and warms up the models
     await session.start(
-        agent=Assistant(session.userdata),
+        agent=Assistant(session.userdata, memory),
         room=ctx.room,
         room_options=room_io.RoomOptions(
             video_input=True,
